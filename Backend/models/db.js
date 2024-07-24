@@ -1,50 +1,109 @@
-// db.js
-
 const { Sequelize } = require("sequelize");
 const { MongoClient } = require("mongodb");
 
-function connectToMySQL(dbName, username, password, host, port) {
-  return new Sequelize(dbName, username, password, {
-    host: host || "localhost",
+async function connectToMySQL(dbName, username, password, host,type) {
+ 
+    // console.log("jhih")
+  let sequelize= new Sequelize(dbName, username, password, {
+    host: host,
     dialect: "mysql",
-    port: port || 3306,
-  });
+  })
+  try{
+  await sequelize.authenticate();
+  return sequelize;
+}
+catch(error)
+{
+  // console.error("Authentication Error:", error);
+  // return res.status(500).json({ message: "Authentication Error" });
+  throw new Error(`Invalid database credentials for ${type}`);
 }
 
-function connectToPostgreSQL(dbName, username, password, host, port) {
-  return new Sequelize(dbName, username, password, {
+}
+
+async function connectToPostgreSQL(dbName, username, password, host,type) {
+ 
+    let sequelize=  new Sequelize(dbName, username, password, {
     host: host || "localhost",
     dialect: "postgres",
-    port: port || 5432,
-  });
+  })
+  try {
+  await sequelize.authenticate();
+  return sequelize;
+}
+catch(error)
+{
+  // console.error("Authentication Error:", error);
+  //   return res.status(500).json({ message: "Authentication Error" });
+  // throw new Error("Invalid database credentials for ");
+  throw new Error(`Invalid database credentials for ${type}`);
+
+
+
+}
 }
 
-async function connectToSQLite(dbName) {
-  return new Sequelize({
+async function connectToSQLite(dbName,type) {
+ 
+    let sequelize=  new Sequelize({
     dialect: "sqlite",
-    storage: dbName, // Path to SQLite database file
-  });
+    storage: '"C:/Users/Charan/Desktop/sqlite3.db"',
+  })
+  try {
+ await  sequelize.authenticate();
+  return sequelize;
+}
+catch(error)
+{
+  // console.error("Authentication Error:", error);
+  // return res.status(500).json({ message: "Authentication Error" });
+  // throw new Error("Invalid database credentials for ");
+  throw new Error(`Invalid database credentials for ${type}`);
+
+
+
+}
 }
 
-function connectToOracle(username, password, host, port, serviceName) {
-  return new Sequelize({
+async function connectToOracle(username, password, host, port,type) {
+
+    let sequelize=  new Sequelize({
     username: username,
     password: password,
     dialect: "oracle",
-    dialectOptions: {
-      connectString: `${host}:${port}/${serviceName}`,
-    },
-  });
+    dialectOptions: { connectString: `${host}:${port}/orcl` },
+  })
+  try {
+  await sequelize.authenticate();
+  return sequelize;
+}
+catch(error)
+{
+  // console.error("Authentication Error:", error);
+  // return res.status(500).json({ message: "Authentication Error" });
+  // throw new Error("Invalid database credentials for ");
+  throw new Error(`Invalid database credentials for ${type}`);
+
+
+
+}
 }
 
-async function connectToMongoDB(mongoURI) {
+async function connectToMongoDB(mongoURI, dbName,type) {
   try {
     const client = new MongoClient(mongoURI);
-    await client.connect();
+    await client.connect().then(() => {
+      // console.log("connected mongodb from connect");
+    });
+
     return client;
   } catch (err) {
-    console.error("Error connecting to MongoDB:", err);
-    throw err;
+    // console.error("Authentication Error:", error);
+    // return res.status(500).json({ message: "Authentication Error" });
+    // throw new Error("Invalid database credentials for ");
+    throw new Error(`Invalid database credentials for ${type}`);
+
+
   }
 }
 
@@ -55,3 +114,5 @@ module.exports = {
   connectToSQLite,
   connectToMongoDB,
 };
+
+
