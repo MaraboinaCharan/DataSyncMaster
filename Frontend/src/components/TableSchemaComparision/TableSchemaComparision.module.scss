@@ -1,0 +1,124 @@
+.dataCompare {
+  width: 100%;
+  font-family: math;
+  min-height: 100vh;
+  // background-image: linear-gradient(135deg, #FFA6B7 10%, #1E2AD2 100%);
+  background-repeat: none;
+  padding-bottom: 10px;
+  &__iconsDiv{
+    padding-top: 30px;
+    margin-left:35px;
+    margin-bottom:10px;
+    margin-right:50px;
+    display: flex;
+    justify-content: space-between;
+    &__rightIcons{
+      display:flex;
+      gap:10px;
+    }
+  }
+  &__heading {
+
+    // color: white;
+    margin: 0 0 0 50px;
+    font-size: 24px;
+  }
+  &__subheading {
+    // color:rgb(235, 226, 226);
+    font-size: larger;
+    margin: 20px 0 0 50px;
+    font-size: 18px;
+  }
+  &__container {
+    display: flex;
+    justify-content: space-around;
+    /* align-items: center; */
+    margin-top: 20px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+    &__dbbox {
+      background-color: rgb(244, 243, 243);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid #d9cdcd;
+      margin-bottom: 30px;
+      margin: 0 30px 20px 30px;
+      max-width: 90%;
+      flex-grow: 1;
+      &__heading {
+        // color: #333;
+        margin: 0 0 10px 0;
+        font-size: 20px;
+      }
+      &__dbtable {
+        min-width: 99%;
+        max-width: 100%;
+        font-family: math;
+        font-size:15px;
+      }
+    }
+  }
+  &__checkbox {
+    margin-left: 50px;
+  }
+  &__submit {
+    display: block;
+    width: 20%;
+    height: 35px;
+    margin: 20px auto;
+    font-family: math;
+    font-size: 18px;
+    // background-color: rgb(49, 165, 55);
+    background-color: rgb(82, 82, 82);
+    color: white;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    &:hover {
+      // background-color: rgb(34, 121, 39);
+      background-color: #9e9d9d;
+    //   background-color: white;
+    //   color: rgb(82, 82, 82);
+    //   border: 1.5px solid rgb(82, 82, 82);
+    }
+  }
+  &__heading2 {
+    // color: white;
+    margin: 40px auto;
+    font-size: 24px;
+    text-align: center;
+  }
+  &__tableDiv {
+    width: 90%;
+    margin: 0 auto;
+    overflow-x: scroll;
+    &__table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #000;
+      th {
+        background-color: rgb(207, 204, 204);
+      }
+      tr:nth-child(even) {
+        background-color: rgb(207, 204, 204);
+      }
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 10px;
+        text-align: left;
+      }
+    }
+  }
+}
+
+// input[type="text"]{
+//     height:200px;
+//     display: flex;
+//     flex-wrap: wrap;
+// }

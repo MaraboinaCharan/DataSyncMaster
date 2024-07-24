@@ -1,0 +1,46 @@
+
+.feildMapping{
+    display: flex;
+    justify-content: space-between;
+    // width: 70%;
+    padding: 20px;
+    background-color:beige; 
+    height: 200px;
+    overflow: scroll;
+
+}
+.feilds{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+}
+.dropped{
+    display: flex;
+    gap: 20px;
+}
+.options{
+    width: 200px;
+    text-align: center;
+    padding: 20px 10px;
+    background-color: white;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    font-size: 24px;
+    color: rgb(82,82,82);
+    p{
+        margin: 0px;
+    }
+}
+.level2{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    color:rgb(82,82,82);
+    margin: 9px 40px 40px 40px;
+    justify-content: space-between;
+    font-family: Math;
+    &__content{
+        font-size: 18px;
+
+    }
+}

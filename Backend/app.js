@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const dbRoutes = require("./routes/dbRoutes");
 const schemaRoutes = require("./routes/schemaRoutes");
-const { fetchData } = require("../DBcheck - Copy/controllers/dbController");
+const {fetchData}=require("../Backend/controllers/dbController")
 
 const path = require("path");
 const cors = require("cors");
