@@ -1,33 +1,147 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const dbRoutes = require("./controllers/dbRoutes");
-const schemaRoutes = require("./controllers/schemaRoutes");
-const { fetchData } = require("./services/dbController");
-
+const {
+  connectToMySQL,
+  connectToPostgreSQL,
+  connectToOracle,
+  connectToSQLite,
+  connectToMongoDB,
+} = require("./models/db");
+const {
+  fetchMongoDBSchema,
+  fetchMySQLSchema,
+  fetchOracleSchema,
+  fetchPostgreSQLSchema,
+  fetchSQLiteSchema,
+} = require("./models/schema");
 const path = require("path");
-const cors = require("cors");
+
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/views", express.static(path.join(__dirname, "views")));
-let exportdata = null;
-
-app.use(
-  cors({
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
-
-app.use("/", dbRoutes);
-app.use("/", schemaRoutes);
+app.use("Backend/views", express.static(path.join(__dirname, "views")));
 
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/views/index.html");
+  res.sendFile(__dirname + "Backend/views/index.html");
+});
+
+let sequelize1, sequelize2;
+let schema1, schema2;
+
+app.post("/connect", async (req, res) => {
+  console.log(req.body);
+
+  try {
+    const {
+      dbType1,
+      dbName1,
+      username1,
+      password1,
+      host1,
+      port1,
+      dbType2,
+      dbName2,
+      username2,
+      password2,
+      host2,
+      port2,
+      mongoURI2,
+      mongoDBName2,
+      mongoURI1,
+      mongoDBName1,
+    } = req.body;
+
+    if (dbType1 === "mysql") {
+      sequelize1 = connectToMySQL(dbName1, username1, password1, host1, port1);
+      console.log("MySQL Database 1 Connected");
+    } else if (dbType1 === "postgres") {
+      sequelize1 = connectToPostgreSQL(
+        dbName1,
+        username1,
+        password1,
+        host1,
+        port1
+      );
+      console.log("PostgreSQL Database 1 Connected");
+    } else if (dbType1 === "sqlite") {
+      sequelize1 = connectToSQLite(dbName1);
+      console.log("SQLite Database 1 Connected");
+    } else if (dbType1 === "oracle") {
+      sequelize1 = connectToOracle(username1, password1, host1, port1);
+      console.log("Oracle Database 1 Connected");
+    } else if (dbType1 === "mongodb") {
+      sequelize1 = await connectToMongoDB(mongoURI1, mongoDBName1);
+      console.log("MongoDB Database Connected");
+    } else {
+      throw new Error("Invalid database type for database 1");
+    }
+    // console.log(await connectToSQLite());
+
+    if (dbType2 === "mysql") {
+      sequelize2 = connectToMySQL(dbName2, username2, password2, host2, port2);
+      console.log("MySQL Database 2 Connected");
+    } else if (dbType2 === "postgres") {
+      sequelize2 = connectToPostgreSQL(
+        dbName2,
+        username2,
+        password2,
+        host2,
+        port2
+      );
+      console.log("PostgreSQL Database 2 Connected");
+    } else if (dbType2 === "sqlite") {
+      sequelize2 = await connectToSQLite(dbName2);
+      console.log("SQLite Database 2 Connected");
+    } else if (dbType2 === "oracle") {
+      sequelize2 = connectToOracle(username2, password2, host2, port2);
+      console.log("Oracle Database 2 Connected");
+    } else if (dbType2 === "mongodb") {
+      sequelize2 = await connectToMongoDB(mongoURI2, mongoDBName2);
+      console.log("MongoDB Database Connected");
+    } else {
+      throw new Error("Invalid database type for database 2");
+    }
+
+    // const [db1Schema, db1Data] =  fetchSchemaAndData(sequelize1, dbType1);
+    // const [db2Schema, db2Data] =  fetchSchemaAndData(sequelize2, dbType2);
+
+    // const schemaDiff = compareSchema(db1Schema,db2Schema);
+    // const dataDiff = compareData(sequelize1, sequelize2, db1Schema, db2Schema);
+
+    // res.json({ schemaDiff, dataDiff });
+
+    if (dbType1 === "mongodb") {
+      schema1 = await fetchMongoDBSchema(sequelize1, mongoDBName1);
+    } else {
+      schema1 = await fetchSchema(sequelize1, dbType1, dbName1, mongoDBName1);
+    }
+
+    console.log(schema1);
+
+    if (dbType2 === "mongodb") {
+      schema2 = await fetchMongoDBSchema(sequelize2, mongoDBName2);
+    } else {
+      schema2 = await fetchSchema(sequelize2, dbType2, dbName2, mongoDBName2);
+    }
+
+    console.log(schema2);
+
+    const data1 = await fetchData(sequelize1, schema1, dbType1);
+    const data2 = await fetchData(sequelize2, schema2, dbType2);
+
+    // console.log(data1);
+    // console.log(data2);
+
+    res.redirect("/schema");
+  } catch (err) {
+    console.error("Error connecting to the dbs:", err);
+    // res.status(500).send("Unable to connect to  dbs");
+  }
 });
 
 app.get("/schema", (req, res) => {
-  res.sendFile(__dirname + "/views/schema.html");
+  res.sendFile(__dirname + "Backend/views/schema.html");
 });
 
 app.get("/schemavalue", (req, res) => {
@@ -36,154 +150,90 @@ app.get("/schemavalue", (req, res) => {
   res.json({ schema1, schema2 });
 });
 
-app.post("/compareData", async (req, res) => {
-  const { db1Query, db2Query, caseSensitive } = req.body;
-  console.log(req.body, "from compare data route");
+function fetchSchemaAndData(sequelize, dbType) {
+  const schema = fetchSchema(sequelize, dbType);
+  const data = fetchData(sequelize, schema);
+  console.log(schema, data);
 
+  return [schema, data];
+}
+
+async function fetchSchema(sequelize, dbType, dbName, mongoDBName) {
   try {
-    let data1, data2;
-
-    try {
-      data1 = await fetchData("mysql", db1Query);
-    } catch (error) {
-      console.error("Error fetching data1:", error);
-      return res
-        .status(500)
-        .json({ db1Error: "Internal server error while fetching data1" });
-    }
-
-    try {
-      data2 = await fetchData("mysql", db2Query);
-    } catch (error) {
-      console.error("Error fetching data2:", error);
-      return res
-        .status(500)
-        .json({ db2Error: "Internal server error while fetching data2" });
-    }
-
-    if (data1 === "Invalid Query") {
-      return res
-        .status(500)
-        .json({ db1Error: "Invalid query for db1", db2Error: "No error" });
-    }
-
-    if (data2 === "Invalid Query") {
-      return res
-        .status(500)
-        .json({ db1Error: "No error", db2Error: "Invalid query for db2" });
-    }
-
-    if (!data1 && !data2) {
-      res.status(500).send("Invalid Query for database 1 and database 2");
-      return;
-    }
-    if (!data1) {
-      res.status(500).send("Invalid Query for database 1");
-      return;
-    }
-    if (!data2) {
-      res.status(500).send("Invalid Query for database 2");
-      return;
-    }
-
-    if (data1 && data2) {
-      exportdata = compareTables(data1, data2, caseSensitive);
-      const response = {
-        exportdata: exportdata,
-        exportdataLength: exportdata.length,
-      };
-      console.log(response.exportdataLength);
-
-      res.send(exportdata);
+    if (dbType === "mysql") {
+      return fetchMySQLSchema(sequelize, dbName);
+    } else if (dbType === "postgres") {
+      return fetchPostgreSQLSchema(sequelize, dbName);
+    } else if (dbType === "oracle") {
+      return fetchOracleSchema(sequelize, dbName);
+    } else if (dbType === "mongodb") {
+      return await fetchMongoDBSchema(sequelize, mongoDBName);
+    } else if (dbType === "sqlite") {
+      return fetchSQLiteSchema(sequelize, dbName);
     } else {
-      res
-        .status(500)
-        .json({
-          error: "Data fetching error: One or more datasets are undefined",
-        });
+      throw new Error("Unsupported database type");
     }
+  } catch (err) {
+    console.error("Error fetching schema:", err);
+    return {};
+  }
+}
+
+async function fetchData(sequelize, schema, dbType) {
+  try {
+    // const dbType = sequelize.options.dialect;
+    const tables = Object.keys(schema);
+    // const tableNames = schema.map((tableName) => Object.keys(tableName)[0]);
+    // console.log("tableNames",tableNames);
+    // console.log("tables", tables)
+    const data = {};
+
+    if (
+      dbType === "mysql" ||
+      dbType === "postgres" ||
+      dbType === "sqlite" ||
+      dbType === "oracle"
+    ) {
+      for (const table of tables) {
+        const [rows, fields] = await sequelize.query(`SELECT * FROM ${table}`);
+        data[table] = rows;
+      }
+    } else if (dbType === "mongodb") {
+      for (const table of tables) {
+        const collection = sequelize.db.collection(table);
+        const rows = await collection.find().toArray();
+        data[table] = rows;
+      }
+    } else {
+      throw new Error("Unsupported database type");
+    }
+    // console.log("Data fetched successfully", data);
+    return data;
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    return {};
+  }
+}
+
+app.post("/table-details", async (req, res) => {
+  try {
+    const { dbType, dbName, tableName } = req.body;
+
+    let schema;
+    if (dbType === "mongodb") {
+      schema = schema1;
+    } else {
+      schema = dbType === "db1" ? schema1 : schema2;
+    }
+
+    let columns = schema[tableName];
+    console.log(columns);
+    res.json({ columns });
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching table details:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-function compareTables(data1, data2, caseSensitive) {
-  const differences = [];
-
-  data1.forEach((row2) => {
-    const matchingRow = data2.find((row1) =>
-      isEqual(row1, row2, caseSensitive)
-    );
-    if (!matchingRow || !isEqual(row2, matchingRow, caseSensitive)) {
-      differences.push(row2);
-    }
-  });
-
-  return differences;
-}
-function isEqual(obj1, obj2, caseSensitive) {
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
-
-  if (keys1.length !== keys2.length) {
-    return false;
-  }
-
-  for (const key of keys1) {
-    let val1 = obj1[key];
-    let val2 = obj2[key];
-
-    if (
-      caseSensitive == "true" &&
-      typeof val1 === "string" &&
-      typeof val2 === "string"
-    ) {
-      val1 = val1.toLowerCase();
-      val2 = val2.toLowerCase();
-    }
-
-    if (val1 !== val2) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-app.get("/exportData", exportData);
-
-async function exportData() {
-  const table = exportdata;
-
-  let csv = [];
-
-  const rows = table.querySelectorAll("tr");
-  rows.forEach((row) => {
-    let rowData = [];
-
-    row.querySelectorAll("td, th").forEach((cell) => {
-      rowData.push(cell.textContent.trim());
-    });
-
-    csv.push(rowData.join(","));
-  });
-
-  csv = csv.join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv" });
-
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "table_data.csv";
-
-  document.body.appendChild(a);
-  a.click();
-
-  document.body.removeChild(a);
-}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
