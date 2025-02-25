@@ -20,7 +20,7 @@ let sequelize1=null, sequelize2=null;
 async function connectToDB(req, res) {
   console.log(req.body);
 
-  //priyanka H changes
+
   // const {
   //   1: { dbType: dbType1, dbName: dbName1, mongoDBName: mongoDBName1, mongoURI: mongoURI1, username: username1, password: password1, host: host1, port: port1 },
   //   2: { dbType: dbType2, dbName: dbName2, username: username2, password: password2, host: host2, port: port2, mongoDBName: mongoDBName2, mongoURI: mongoURI2 }
